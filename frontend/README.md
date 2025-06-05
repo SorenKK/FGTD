@@ -1,70 +1,73 @@
-# Getting Started with Create React App
+# Frontend – FGTD
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the **React + Electron frontend** of FGTD (From GEO to Dataset), a desktop application that allows users to perform customized searches on GEO datasets and extract related PubMed literature.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Main Files (in `src/`)
 
-### `npm start`
+### `index.js`
+- Root entry point of the React app.
+- Uses `HashRouter` from `react-router-dom` to manage navigation in the Electron environment.
+- Renders the `<App />` component and sets up routes.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### `App.js`
+- Central routing component for the app.
+- Defines main routes:
+  - `/` → `SearchForm`: the main search interface
+  - `/processing` → `ProcessingPage`: shows progress/loading
+  - `/results` → `SearchResultsPage`: shows extracted data
+  - `/analysis` → `Analysis`: displays charts and statistics
+- Supports **Dark Mode** via a toggleable state.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### `App.css`
+- Custom styles using **Tailwind CSS**.
+- Styles the layout and animations.
+- Includes:
+  - `.App-header`, `.App-logo`, etc.
+  - Dark mode support tied to Tailwind classes.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Components (in `src/components/`)
 
-### `npm run build`
+### `SearchForm.js`
+- The main entry form for user input.
+- Allows insertion of:
+  - Free-text query
+  - Email (optional)
+  - Keywords, MeSH terms, number of pages
+  - Output file format
+  - **Advanced Filters** (Organism, Study Type, Subset Type, Supplementary Files, Date Range)
+- Sends the request to the backend's `/api/search` and `/api/check_query` endpoints.
+- Dynamically renders submenus and conditionally expands filter panels.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### `ProcessingPage.js`
+- Displays a progress bar and log streaming during backend processing.
+- Progress bar changes color (e.g. red then blue) to indicate different scraping phases.
+- Shows live log lines from Flask via periodic polling.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### `SearchResultsPage.js`
+- Shows a paginated table of results (GSE datasets + metadata).
+- Allows export of results and displays selected filters.
+- Includes section for **Additional Info** like SRA links, MeSH terms, etc.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### `Analysis.js`
+- Visual analytics dashboard.
+- Displays:
+  - Bar charts for organisms, keywords, study types
+  - Pie chart of MeSH term categories
+  - Time trends
+- Uses Chart.js or Recharts (depending on implementation).
 
-### `npm run eject`
+### `logo_in_page.png`
+- Visual logo used in headers or pages for branding.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## ▶️ Running Locally
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+cd frontend
+npm install
+npm start
