@@ -49,7 +49,7 @@ The server will be available at `http://localhost:5000`.
    source venv/bin/activate  # or venv\Scripts\activate on Windows
    pip install -r requirements.txt
 
-   To compile the backend into a standalone executable using PyInstaller:
+
 
 
 ## Build the Executable
