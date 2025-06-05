@@ -1,4 +1,4 @@
-## FGTD - From GEO To Dataset
+# FGTD - From GEO To Dataset
 FGTD (From GEO to Dataset) is a cross-platform desktop tool that integrates web scraping from the GEO DataSets portal with literature mining from PubMed. The app is built for researchers needing to retrieve, filter, and correlate experimental datasets and scientific publications quickly and interactively.
 
 Architecture Overview
