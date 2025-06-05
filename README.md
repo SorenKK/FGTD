@@ -44,4 +44,11 @@ Linux build (.AppImage)
 
 Releases are available on GitHub under the "Releases" tab
 
+## 📚 Citation
 
+If you use FGTD in your research, please cite it as follows:
+
+> ...
+
+A formal reference will be available upon publication.  
+Until then, please refer to the GitHub repository directly.
