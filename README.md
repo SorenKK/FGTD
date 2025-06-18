@@ -208,3 +208,39 @@ Once you've applied the desired filters, you can export the resulting data in:
 - `.XLSX` format
 
 Use the **"Download Filtered Table"** button at the bottom of the page to save your results locally.
+
+##  Statistics & Charts
+
+By clicking **"Statistics & Charts"**, you can access an advanced module for statistical analysis and data visualization.
+
+This section is dynamically built based on the filters applied in the previous table — meaning only the **selected studies** are analyzed, making the results more precise and relevant.
+
+### Key Features:
+
+- **Metric Indicators**: For each keyword or concept, FGTD computes:
+  - `Total Max`: total occurrences across all selected papers
+  - `Average`: average distribution per paper
+  - `Count`: number of papers where the term appears
+
+- **Bar Chart**: Visualizes the frequency of keywords across studies, helping to identify dominant or underrepresented topics.
+
+- **Pie Chart**: Shows the relative importance of each term as a percentage of the total, offering a quick comparison of thematic weight.
+
+- **Similarity Map**: Highlights relationships between scientific papers based on **semantic similarity**, calculated via a **TF-IDF model**.
+
+- **Keyword Trend Over Publications**: Displays the **cumulative timeline** of keyword usage, revealing how scientific terms evolve over time.
+
+  Below placeholder images of the graphs:
+![image](https://github.com/user-attachments/assets/16acabe5-196f-4d28-a77f-e1d7bffcb18e)
+
+![image](https://github.com/user-attachments/assets/045a8654-d74c-4f9d-9c57-bc58a361ad01)
+
+![image](https://github.com/user-attachments/assets/8e1ea7b5-7f14-4d1a-a6f9-d631bb5d6ca9)
+
+![image](https://github.com/user-attachments/assets/58c10255-f0ce-4862-a881-af613ad1aa19)
+
+
+
+
+
+
