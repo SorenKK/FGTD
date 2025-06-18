@@ -101,8 +101,12 @@ This page provides:
 ## Timing Breakdown
 
 - Applying filters: ~**40 seconds**
-- Scraping a single GEO page: ~**50 seconds to 1 minute**
+- Scraping a single GEO page (20 papers) : ~**50 seconds to 1 minute**
 
 These durations are indicative and may vary slightly depending on network speed and server responsiveness.
 
+Since the application is lightweight, you can safely launch the analysis and continue working on other tasks —  
+letting the program handle the bibliographic search for you.
+Once processing is complete, the user is taken to the **Results Overview** page,  
+where all findings are summarized in a clear, interactive dashboard.
 
