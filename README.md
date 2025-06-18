@@ -63,6 +63,15 @@ In the next section, you can enter **keywords** and **MeSH terms** relevant to y
 - **Keywords** are searched within the **GEO summary** and, if available, in the **abstract** of the linked PubMed article.
 - **MeSH terms** are searched specifically in the **MeSH section** of the associated PubMed article.
 
+  > *Important note:*  
+Since this is a **text mining–based application**, it searches for the **exact text strings** you provide.  
+This means that variations in terminology may lead to missed matches.  
+For example:
+- Searching for `RNA sequencing` will **not** match `RNA-seq`
+- Typing `ATP` will **not** match `Adenosine triphosphate`
+
+To improve coverage, it is strongly recommended to enter **multiple variations** of key terms, especially for acronyms, synonyms, or different notations (e.g., `RNA sequencing`, `RNA-seq`).
+
 During the analysis, each keyword or MeSH term you enter will be checked for presence.  
 If a match is found, the corresponding column in the final results table will be marked with a `1`, otherwise `0`.
 
