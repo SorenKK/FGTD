@@ -32,7 +32,7 @@ Once the application is launched, you will be presented with the following **sea
 
 At the top of the form, you are asked to enter an **email address**.  
 This is required solely to access the **PubMed API**, as it is mandated by NCBI.  
-🔒 No personal data is stored or collected — user privacy is fully respected.
+No personal data is stored or collected — user privacy is fully respected.
 
 ## Query section
 
@@ -64,11 +64,10 @@ In the next section, you can enter **keywords** and **MeSH terms** relevant to y
 - **MeSH terms** are searched specifically in the **MeSH section** of the associated PubMed article.
 
   > *Important note:*  
-Since this is a **text mining–based application**, it searches for the **exact text strings** you provide.  
-This means that variations in terminology may lead to missed matches.  
-For example:
-- Searching for `RNA sequencing` will **not** match `RNA-seq`
-- Typing `ATP` will **not** match `Adenosine triphosphate`
+  Since this is a **text mining–based application**, it searches for the **exact text strings** you provide.  
+  This means that variations in terminology may lead to missed matches.  For example:
+  - Searching for `RNA sequencing` will **not** match `RNA-seq`
+  - Typing `ATP` will **not** match `Adenosine triphosphate`
 
 To improve coverage, it is strongly recommended to enter **multiple variations** of key terms, especially for acronyms, synonyms, or different notations (e.g., `RNA sequencing`, `RNA-seq`).
 
