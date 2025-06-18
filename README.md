@@ -152,3 +152,59 @@ Further down, the app shows a **preview of the complete dataset** generated afte
 
 > If **automatic download** is enabled, the raw table is saved in the app folder.  
 > A filtered version will be available on the next page.
+
+# Analysis Tools
+
+By clicking **"Continue Analysis"**, you are redirected to the **interactive data table**, where all the collected information is organized into a detailed and filterable structure.
+
+## Table Structure
+
+The table is divided into **five macro-sections** (column groups) for easier navigation:
+
+1. **Article Info**
+2. **Procedure Info & Summary**
+3. **Additional Info**
+4. **First 3 Samples and Info**
+5. **MeSH Term in Articles and Keywords**
+
+Each group contains relevant columns, including:
+
+- `Title/PMID`
+- `GSE`
+- `Date`
+- `Platform`
+- `Organisms`
+- `Instrument_1`, `Instrument_2`, `Instrument_3`
+- `Summary`
+- `Series Matrix Link`, `SOFT formatted family file(s) Link`, `MINiML formatted family file(s) Link`
+- `BioProject link`, `Geo2R`, `Other link and GDV`
+- `SRA Run Selector`
+- `Samples_1`, `Samples_2`, `Samples_3`, `Samples_Count`
+- A column for each keyword or mesh term entered in the pre-analysis phase
+
+##  Filtering and Interaction
+
+Each column can be filtered by clicking the small arrow next to its name:
+- You can type in a **search term** to filter specific values
+- Or click on available options directly (e.g., `"Homo sapiens"`, `"Illumina"`)
+
+The **keyword and MeSH term columns** (`0` or `1`) allow binary filtering:
+- `1` = the term was found
+- `0` = the term was not found
+
+> 🔗 All **blue-highlighted strings** in the table are **clickable hyperlinks** that lead to the corresponding **GEO**, **PubMed**, or **SRA** pages.
+
+---
+
+![Screenshot 2025-06-18 101243](https://github.com/user-attachments/assets/ee184760-ca56-496e-bcc8-24001cfbb9e7)
+
+
+---
+
+## Export Options
+
+Once you've applied the desired filters, you can export the resulting data in:
+- `.CSV` format
+- `.XLSX` format
+
+Use the **"Download Filtered Table"** button at the bottom of the page to save your results locally.
