@@ -34,6 +34,8 @@ At the top of the form, you are asked to enter an **email address**.
 This is required solely to access the **PubMed API**, as it is mandated by NCBI.  
 🔒 No personal data is stored or collected — user privacy is fully respected.
 
+## Query section
+
 Below that, you’ll find the **query input field**, where you can enter your search term (e.g. breast cancer).  
 This is the core of your search and defines what will be queried on the GEO database.
 
@@ -53,6 +55,8 @@ This will open a **dropdown panel** (as shown in the screenshot below, from the 
 After choosing your filters, click **"Confirm and Check Query"**.  
 The app will then check how many **GEO pages** and **PubMed articles** are available for that query-filter combination.  
 It will also **suggest an appropriate number of pages** to analyze, which will be auto-filled in the page selection field.
+
+## Keywords and MeSH Terms
 
 In the next section, you can enter **keywords** and **MeSH terms** relevant to your research.
 
