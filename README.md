@@ -23,5 +23,13 @@ sudo apt install libfuse2
 # If you encounter issues running the AppImage, try launching it using the no-sandbox mode:
 ./File.AppImage --no-sandbox
 
+```
+
+# Getting Started
+
+Once the application is launched, you will be presented with the following **search form module**, which needs to be filled out to start the analysis:
+
+![Screenshot 2025-06-18 081857](https://github.com/user-attachments/assets/cd139f5f-df80-4321-b564-27d38cdebfd8)
+
 
 
