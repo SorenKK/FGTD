@@ -86,3 +86,23 @@ The final setting is the **analysis mode**:
   This offers a more comprehensive analysis, but takes slightly longer to complete.
 
 Choose the mode based on the **depth vs speed** trade-off that suits your research.
+Now it's possibile to click on "Start Scraping" to start the analysis. 
+
+# Processing Phase
+
+Once the analysis is launched, the app navigates to the **processing page**, where you can monitor the progress in real time.
+
+![Screenshot 2025-06-18 091435](https://github.com/user-attachments/assets/d15b6fc3-b296-4086-ae57-c26a6cff592f)
+
+This page provides:
+- An **estimated processing time**, which depends on the size of the query, your internet connection, and the current load on external servers (e.g., GEO, PubMed).
+- A **toggleable terminal view**, where you can inspect the live log output of the scraping process.
+
+## Timing Breakdown
+
+- Applying filters: ~**40 seconds**
+- Scraping a single GEO page: ~**50 seconds to 1 minute**
+
+These durations are indicative and may vary slightly depending on network speed and server responsiveness.
+
+
