@@ -230,7 +230,10 @@ This section is dynamically built based on the filters applied in the previous t
 
 - **Keyword Trend Over Publications**: Displays the **cumulative timeline** of keyword usage, revealing how scientific terms evolve over time.
 
-*Below placeholder images of the graphs:* 
+  
+
+### *Below placeholder images of the graphs:*
+
 
 ![image](https://github.com/user-attachments/assets/16acabe5-196f-4d28-a77f-e1d7bffcb18e)
 
