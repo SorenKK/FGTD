@@ -5,7 +5,7 @@ Architecture Overview
 FGTD is structured in two main layers:
 
 Frontend (React + Tailwind + Electron):
-The user interface, built with React and styled with TailwindCSS, is packaged as a desktop app using Electron. It provides real-time interaction and displays results and statistics.
+The user interface, built with React and styled with TailwindCSS, is packaged as a desktop app using Electron. It provides real-time interaction and displays results and statistics. 
 
 Backend (Python + Flask + Selenium + BeautifulSoup):
 The backend is a Python service responsible for scraping and parsing data from GEO and PubMed. It supports advanced filtering (e.g., organism, study type, supplementary files) and outputs tabular results (Excel/CSV).
@@ -53,3 +53,13 @@ This will open a **dropdown panel** (as shown in the screenshot below, from the 
 After choosing your filters, click **"Confirm and Check Query"**.  
 The app will then check how many **GEO pages** and **PubMed articles** are available for that query-filter combination.  
 It will also **suggest an appropriate number of pages** to analyze, which will be auto-filled in the page selection field.
+
+In the next section, you can enter **keywords** and **MeSH terms** relevant to your research.
+
+- **Keywords** are searched within the **GEO summary** and, if available, in the **abstract** of the linked PubMed article.
+- **MeSH terms** are searched specifically in the **MeSH section** of the associated PubMed article.
+
+During the analysis, each keyword or MeSH term you enter will be checked for presence.  
+If a match is found, the corresponding column in the final results table will be marked with a `1`, otherwise `0`.
+
+This binary system allows you to **easily filter** the papers or datasets that are most relevant to your research goals, directly from the final tabular output.
