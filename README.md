@@ -110,3 +110,33 @@ letting the program handle the bibliographic search for you.
 Once processing is complete, the user is taken to the **Results Overview** page,  
 where all findings are summarized in a clear, interactive dashboard.
 
+# 📊 Results Overview
+
+Once the processing is complete, the user is automatically redirected to the **Results Overview** page.
+
+## Summary Panel
+
+At the top of the page, a **summary panel** displays the details of the search:
+- Query terms
+- Keywords and MeSH terms used
+- Applied filters (e.g., organism, study type, date range)
+
+This gives a clear and immediate overview of the scope and criteria of your analysis.
+
+##  GSE–PMID Associations
+
+Immediately below, a **tabular list of GSE–PMID associations** is displayed.  
+For each dataset, you can view:
+- The study title (if the GSE does not have a PMID associated ) or The PubMed ID (PMID)
+- The corresponding GSE accession code
+  
+![Screenshot 2025-06-18 092123](https://github.com/user-attachments/assets/ef6ef0cc-98f1-4d32-adae-b453b83ca651)
+
+You can expand the table to show all results using the **"Show All Rows"** button.
+
+Further down, the app shows a **preview of the complete dataset** generated after the scraping process.  
+
+![Screenshot 2025-06-18 092310](https://github.com/user-attachments/assets/b7a4edb3-be05-4df2-8400-aa6e28db1f42)
+
+> If **automatic download** is enabled, the raw table is saved in the app folder.  
+> A filtered version will be available on the next page.
