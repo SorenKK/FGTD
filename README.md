@@ -63,3 +63,22 @@ During the analysis, each keyword or MeSH term you enter will be checked for pre
 If a match is found, the corresponding column in the final results table will be marked with a `1`, otherwise `0`.
 
 This binary system allows you to **easily filter** the papers or datasets that are most relevant to your research goals, directly from the final tabular output.
+
+Below the MeSH Terms section, you can define the **number of GEO pages** to scrape.  
+The higher the number of pages, the more datasets and associated papers will be analyzed — but this also increases the overall processing time.
+
+Next, you can choose the **file format** for the **unfiltered output** (CSV or Excel), which will be automatically downloaded if you leave **"Yes"** selected in the *"Automatic download of unfiltered file?"* option.
+
+You also have the option to **remove empty columns** from the final output, helping to keep your results clean and focused.
+
+### Analysis Modes
+
+The final setting is the **analysis mode**:
+
+- **Normal Mode**: Only GSE entries that explicitly list a **PMID** (PubMed ID) are analyzed.  
+  This makes the process faster — about **10% quicker** than Ultra Mode — and is ideal for large-scale queries.
+  
+- **Ultra Mode**: Bypasses the PMID restriction by scraping **all available papers** linked to the query results.  
+  This offers a more comprehensive analysis, but takes slightly longer to complete.
+
+Choose the mode based on the **depth vs speed** trade-off that suits your research.
