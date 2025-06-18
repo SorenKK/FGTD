@@ -21,7 +21,7 @@ For example, on Debian/Ubuntu-based systems you can install it with:
 sudo apt install libfuse2
 
 # If you encounter issues running the AppImage, try launching it using the no-sandbox mode:
-./YourApp.AppImage --no-sandbox
+./File.AppImage --no-sandbox
 
 
 
