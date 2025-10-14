@@ -10,7 +10,7 @@ The user interface, built with React and styled with TailwindCSS, is packaged as
 Backend (Python + Flask + Selenium + BeautifulSoup):
 The backend is a Python service responsible for scraping and parsing data from GEO and PubMed. It supports advanced filtering (e.g., organism, study type, supplementary files) and outputs tabular results (Excel/CSV).
 The application workflow is summarized as follows: 
-:[fgtd_workflow.pdf](https://github.com/user-attachments/files/22906489/fgtd_workflow.pdf)
+[fgtd_workflow.pdf](https://github.com/user-attachments/files/22906489/fgtd_workflow.pdf)
 
 # How to install 
 Once you have downloaded the Windows installer from the release section, simply run it as administrator to ensure proper installation.
