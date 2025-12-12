@@ -1,4 +1,7 @@
 # Tutorial : FGTD - From GEO To Dataset
+AI-Powered Search & Visualization Overhaul
+FGTD has received a major update. The core now features an **AI-Powered Relevance Score** that uses vector search (Qdrant) to rank papers by conceptual similarity rather than just keyword matching. We have also introduced a distraction-free **Focus Mode**, high-quality **Vector Graphics Export** (SVG) for publications, and an improved **Similarity Map** algorithm.
+
 FGTD (From GEO to Dataset) is a cross-platform desktop tool that integrates web scraping from the GEO DataSets portal with literature mining from PubMed. The app is built for researchers needing to retrieve, filter, and correlate experimental datasets and scientific publications quickly and interactively.
 
 Architecture Overview
@@ -7,8 +10,8 @@ FGTD is structured in two main layers:
 Frontend (React + Tailwind + Electron):
 The user interface, built with React and styled with TailwindCSS, is packaged as a desktop app using Electron. It provides real-time interaction and displays results and statistics. 
 
-Backend (Python: Flask + Selenium + BeautifulSoup):
-The backend is a Python service responsible for scraping and parsing data from GEO and PubMed. It supports advanced filtering (e.g., organism, study type, supplementary files) and outputs tabular results (Excel/CSV).
+**Backend (Python: Flask + Selenium + BeautifulSoup + Qdrant):**
+The backend is a Python service responsible for scraping and parsing data. In v1.0, it now includes **Qdrant** and **Sentence Transformers** to perform neural network-based semantic analysis for the new scoring system.
 The application workflow is summarized as follows: 
 
 
@@ -38,7 +41,8 @@ Once the application is launched, you will be presented with the following **sea
 At the top of the form, you are asked to enter an **email address**.  
 This is required solely to access the **PubMed API**, as it is mandated by NCBI.  
 No personal data is stored or collected — user privacy is fully respected.
-
+### ✨ New: Focus Mode
+When interacting with the Search Form, FGTD v1.0 automatically engages **Focus Mode**. This highlights the active input field and dims the surrounding background, providing a distraction-free environment to minimize errors during query setup.
 ## Query section
 
 Below that, you’ll find the **query input field**, where you can enter your search term (e.g. breast cancer).  
@@ -174,6 +178,7 @@ The table is divided into **five macro-sections** (column groups) for easier nav
 
 Each group contains relevant columns, including:
 
+- `Relevance` (New in v1.0: AI-calculated score 0.0 - 1.0)
 - `Title/PMID`
 - `GSE`
 - `Date`
@@ -226,16 +231,39 @@ This section is dynamically built based on the filters applied in the previous t
   - `Total Max`: total occurrences across all selected papers
   - `Average`: average distribution per paper
   - `Count`: number of papers where the term appears
-
+  
+> **New:** All charts can now be exported as **Vector Graphics (SVG)** for high-quality use in scientific publications.
 - **Bar Chart**: Visualizes the frequency of keywords across studies, helping to identify dominant or underrepresented topics.
 
 - **Pie Chart**: Shows the relative importance of each term as a percentage of the total, offering a quick comparison of thematic weight.
 
 - **Similarity Map**: Highlights relationships between scientific papers based on **semantic similarity**, calculated via a **TF-IDF model**.
-
+> **New:** In v1.0, the network graph uses a **"boosted" relative scoring algorithm**. This makes relationships between papers clearer, grouping conceptually similar studies more effectively than before.
 - **Keyword Trend Over Publications**: Displays the **cumulative timeline** of keyword usage, revealing how scientific terms evolve over time.
 
-  
+  # 🧠 Under the Hood: The Scoring Algorithm
+
+FGTD v1.0 introduces a sophisticated ranking system that goes beyond simple keyword counting. The scraper uses a hybrid approach combining **NLP (Natural Language Processing)** and traditional bibliometrics.
+
+
+
+The final `Relevance Score` is calculated as follows:
+
+### 1. Textual Analysis ($T_{score}$) - 75% Weight
+The content (Title + Summary) is analyzed via three vectors:
+* **S_score (Semantic):** Uses `sentence-transformers` and **Qdrant** to calculate cosine similarity between your query and the paper's meaning.
+* **K_score (Keyword Champion):** Uses a "Champion" logic, heavily rewarding papers with the highest density of your specific keywords.
+* **M_score (MeSH):** A binary check for specific Medical Subject Headings.
+
+### 2. Bibliographic Impact ($B_{score}$) - 25% Weight
+Evaluates the paper's impact:
+* **R_score (Recency):** Favors newer publications.
+* **C_score (Citations):** Applies a logarithmic scale to citation counts to balance famous papers with niche findings.
+
+### Final Formula
+$$Relevance = (T_{score} \cdot 0.75) + (B_{score} \cdot 0.25)$$
+
+This ensures that results are prioritized by **semantic relevance** to your specific query, rather than just popularity.
 
 #### ( *Below placeholder images of the graphs*) 
 
