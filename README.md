@@ -265,6 +265,10 @@ $$Relevance = (T_{score} \cdot 0.75) + (B_{score} \cdot 0.25)$$
 
 This ensures that results are prioritized by **semantic relevance** to your specific query, rather than just popularity.
 
+Below a representation of the displayed Reference score:
+
+<img width="794" height="1188" alt="Screenshot from 2026-01-12 11-32-00" src="https://github.com/user-attachments/assets/fcdfc485-83e2-42c2-9225-a40534f90b2f" />
+
 #### ( *Below placeholder images of the graphs*) 
 
 
