@@ -1,20 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const ProcessingPage = () => {
-  const location = useLocation();
-  const { totalPages, isDarkMode, filters } = location.state || { totalPages: 0, isDarkMode: false };
+  const location  = useLocation();
+  const navigate  = useNavigate();
+  const { totalPages, isDarkMode, filters, requestData } = location.state || { totalPages: 0, isDarkMode: false };
   const [delayPhase, setDelayPhase] = useState(filters && Object.keys(filters).length > 0);
   const [progress, setProgress] = useState(0);
   const [showTerminal, setShowTerminal] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [apiError, setApiError] = useState(null);
   const lastLogRef = useRef(null);
+  const hasFiredRef = useRef(false); // evita doppia chiamata in StrictMode
 
-  const SECONDS_PER_PAGE = 57;
+  const SECONDS_PER_PAGE = 59;
   const UPDATE_INTERVAL = 6.2;
   const totalTimeInSeconds = totalPages * SECONDS_PER_PAGE;
   const totalSteps = Math.ceil(totalTimeInSeconds / UPDATE_INTERVAL);
   const progressPerStep = 100 / totalSteps;
+
+  // --- CHIAMATA API: parte quando la fase di delay è terminata ---
+  // ProcessingPage è il componente montato durante l'attesa, quindi è il posto
+  // corretto per fare la POST. Questo evita setState su componente smontato.
+  useEffect(() => {
+    if (!requestData) return;         // nessun dato → niente da fare
+    if (hasFiredRef.current) return;  // già partita (StrictMode double-invoke)
+    hasFiredRef.current = true;
+
+    const runSearch = async () => {
+      try {
+        const response = await axios.post('http://localhost:5000/api/search', requestData);
+        navigate('/results', {
+          state: {
+            results: response.data,
+            searchQuery: requestData.query,
+            keywords: requestData.keywords,
+            meshTerms: requestData.m_s,
+            isDarkMode,
+            mode: requestData.mode,
+            filters: requestData.filters,
+          },
+        });
+      } catch (err) {
+        const msg = err.response?.data?.message || err.message || 'Unknown error';
+        setApiError(`Search failed: ${msg}`);
+        setProgress(0);
+      }
+    };
+
+    runSearch();
+  }, [delayPhase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     document.body.style.backgroundColor = isDarkMode ? '#121212' : '#f0f4f8';
@@ -215,6 +251,38 @@ const ProcessingPage = () => {
         >
           {delayPhase ? 'Applying filters...' : 'Processing data...'}
         </p>
+
+        {/* Messaggio di errore API (visibile solo in caso di fallimento) */}
+        {apiError && (
+          <div style={{
+            backgroundColor: '#fff0f0',
+            border: '1px solid #ff4c4c',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            marginBottom: '12px',
+            color: '#cc0000',
+            fontSize: '13px',
+            textAlign: 'left',
+          }}>
+            <strong>Error:</strong> {apiError}
+            <br />
+            <button
+              onClick={() => window.history.back()}
+              style={{
+                marginTop: '8px',
+                backgroundColor: '#cc0000',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '5px 14px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              ← Go back
+            </button>
+          </div>
+        )}
 
         {/* Barra di progresso e percentuale */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '6px' }}>
