@@ -41,7 +41,7 @@ Once the application is launched, you will be presented with the following **sea
 At the top of the form, you are asked to enter an **email address**.  
 This is required solely to access the **PubMed API**, as it is mandated by NCBI.  
 No personal data is stored or collected — user privacy is fully respected.
-### ✨ New: Focus Mode
+### New: Focus Mode
 When interacting with the Search Form, FGTD v1.0 automatically engages **Focus Mode**. This highlights the active input field and dims the surrounding background, providing a distraction-free environment to minimize errors during query setup.
 ## Query section
 
@@ -72,7 +72,7 @@ In the next section, you can enter **keywords** and **MeSH terms** relevant to y
 - **Keywords** are searched within the **GEO summary** and, if available, in the **abstract** of the linked PubMed article.
 - **MeSH terms** are searched specifically in the **MeSH section** of the associated PubMed article.
 
-> ⚠️ **Important note:**  
+>  **Important note:**  
 > This application performs text mining based on **exact matches** of the strings you provide.  
 > Variations in wording may lead to missed results.  
 > 
@@ -131,7 +131,7 @@ letting the program handle the bibliographic search for you.
 Once processing is complete, the user is taken to the **Results Overview** page,  
 where all findings are summarized in a clear, interactive dashboard.
 
-# 📊 Results Overview
+# Results Overview
 
 Once the processing is complete, the user is automatically redirected to the **Results Overview** page.
 
@@ -241,7 +241,7 @@ This section is dynamically built based on the filters applied in the previous t
 > **New:** In v1.0, the network graph uses a **"boosted" relative scoring algorithm**. This makes relationships between papers clearer, grouping conceptually similar studies more effectively than before.
 - **Keyword Trend Over Publications**: Displays the **cumulative timeline** of keyword usage, revealing how scientific terms evolve over time.
 
-  # 🧠 Under the Hood: The Scoring Algorithm
+  # Under the Hood: The Scoring Algorithm
 
 FGTD v1.0 introduces a sophisticated ranking system that goes beyond simple keyword counting. The scraper uses a hybrid approach combining **NLP (Natural Language Processing)** and traditional bibliometrics.
 
