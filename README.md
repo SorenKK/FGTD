@@ -16,7 +16,7 @@ FGTD (From GEO to Dataset) is a cross-platform desktop tool that integrates web 
     - Improved overall data handling and stability.
 - **Documentation & UX**: Refined the UI and added direct links to the GitHub repository for quick access to tutorials.
 
-Architecture Overview
+## Architecture Overview
 FGTD is structured in two main layers:
 
 Frontend (React + Tailwind + Electron):
