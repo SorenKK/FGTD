@@ -81,7 +81,7 @@ After choosing your filters, click **"Confirm and Check Query"**.
 The app will then check how many **GEO pages** and **PubMed articles** are available for that query-filter combination.  
 It will also **suggest an appropriate number of pages** to analyze, which will be auto-filled in the page selection field.
 
-## Keywords and MeSH Terms
+## Keywords and MeSH Terms - exact terms research
 
 In the next section, you can enter **keywords** and **MeSH terms** relevant to your research.
 
