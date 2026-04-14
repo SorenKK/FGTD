@@ -1,0 +1,7 @@
+venv/
+node_modules/
+backend/build/
+dist/
+*.dll
+*.exe
+__pycache__/
