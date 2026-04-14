@@ -6,15 +6,15 @@ FGTD (From GEO to Dataset) is a cross-platform desktop tool that integrates web 
 
 This marks the first ready-to-use release of **FGTD**. After extensive internal development, this version introduces major stability and performance upgrades:
 
-### 🧠 AI-Powered Core
-- **Conceptual Ranking**: Replaced keyword matching with an **AI-Powered Relevance Score**. Using **Qdrant vector search**, the system now ranks papers by conceptual similarity, understanding the context of your research.
+### AI-Powered Core
+- **Conceptual Ranking**: **AI-Powered Relevance Score**. Using **Qdrant vector search**, the system now ranks papers by conceptual similarity, understanding the context of your research.
 - **Improved Similarity Map**: A refined algorithm for more accurate clustering and visualization of related works.
 
-### 🎨 Export & Visuals
-- **Vector Graphics (SVG)**: You can now export your similarity maps and graphs in high-quality SVG format, ready for academic publications and presentations.
+### Export & Visuals
+- **Vector Graphics (SVG) and HTML**: You can now export your similarity maps and graphs in high-quality SVG format, ready for academic publications and presentations.
 - **Focus Mode**: Introduced a distraction-free interface to help you concentrate on analysis without UI clutter.
 
-### 🛠️ Technical Improvements
+### Technical Improvements
 - **JSON Data Management**: Save and load your compilation data in JSON format for better portability and stability.
 - **gotoGeo Navigation**: New direct access button to instantly jump to query check pages.
 - **Deep Integration**: Added hyperlinks within the map to directly access similar papers and external tutorial resources.
