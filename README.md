@@ -237,7 +237,7 @@ This section is dynamically built based on the filters applied in the previous t
 
 - **Pie Chart**: Shows the relative importance of each term as a percentage of the total, offering a quick comparison of thematic weight.
 
-- **Similarity Map**: Highlights relationships between scientific papers based on **semantic similarity**, calculated via a **TF-IDF model**.
+- **Similarity Map**: Highlights relationships between scientific papers.
 > **New:** In v1.0, the network graph uses a **"boosted" relative scoring algorithm**. This makes relationships between papers clearer, grouping conceptually similar studies more effectively than before.
 - **Keyword Trend Over Publications**: Displays the **cumulative timeline** of keyword usage, revealing how scientific terms evolve over time.
 
