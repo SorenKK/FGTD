@@ -4,6 +4,18 @@ FGTD has received a major update. The core now features an **AI-Powered Relevanc
 
 FGTD (From GEO to Dataset) is a cross-platform desktop tool that integrates web scraping from the GEO DataSets portal with literature mining from PubMed. The app is built for researchers needing to retrieve, filter, and correlate experimental datasets and scientific publications quickly and interactively.
 
+## What's New in v1.0.0 - Public Release
+
+- **Enhanced Query Performance**: Significantly improved the speed of the query checking process.
+- **JSON Data Management**: Added support for saving and loading compilation data using JSON format for better portability.
+- **New "gotoGeo" Feature**: Introduced a dedicated "gotoGeo" button to instantly access the query check page.
+- **UI Overhaul**: Improved the interface across the **Analysis** page for a more intuitive user experience.
+- **Similarity Map Evolution**: 
+    - Optimized structure using scores directly stored in **Qdrant**.
+    - Added hyperlinks to easily access and view similar papers.
+    - Improved overall data handling and stability.
+- **Documentation & UX**: Refined the UI and added direct links to the GitHub repository for quick access to tutorials.
+
 Architecture Overview
 FGTD is structured in two main layers:
 
@@ -13,6 +25,7 @@ The user interface, built with React and styled with TailwindCSS, is packaged as
 **Backend (Python: Flask + Selenium + BeautifulSoup + Qdrant):**
 The backend is a Python service responsible for scraping and parsing data. In v1.0, it now includes **Qdrant** and **Sentence Transformers** to perform neural network-based semantic analysis for the new scoring system.
 The application workflow is summarized as follows: 
+
 
 
 <img width="2244" height="3108" alt="workflow_fgtd" src="https://github.com/user-attachments/assets/bf91e956-ae45-471e-8357-a53e5ce41871" />
