@@ -1,20 +1,23 @@
-# Tutorial : FGTD - From GEO To Dataset
-AI-Powered Search & Visualization Overhaul
-FGTD has received a major update. The core now features an **AI-Powered Relevance Score** that uses vector search (Qdrant) to rank papers by conceptual similarity rather than just keyword matching. We have also introduced a distraction-free **Focus Mode**, high-quality **Vector Graphics Export** (SVG) for publications, and an improved **Similarity Map** algorithm.
+# Tutorial : FGTD - From GEO To Dataset 
 
 FGTD (From GEO to Dataset) is a cross-platform desktop tool that integrates web scraping from the GEO DataSets portal with literature mining from PubMed. The app is built for researchers needing to retrieve, filter, and correlate experimental datasets and scientific publications quickly and interactively.
 
-## What's New in v1.0.0 - Public Release
+## v1.0.0 - Official Release
 
-- **Enhanced Query Performance**: Significantly improved the speed of the query checking process.
-- **JSON Data Management**: Added support for saving and loading compilation data using JSON format for better portability.
-- **New "gotoGeo" Feature**: Introduced a dedicated "gotoGeo" button to instantly access the query check page.
-- **UI Overhaul**: Improved the interface across the **Analysis** page for a more intuitive user experience.
-- **Similarity Map Evolution**: 
-    - Optimized structure using scores directly stored in **Qdrant**.
-    - Added hyperlinks to easily access and view similar papers.
-    - Improved overall data handling and stability.
-- **Documentation & UX**: Refined the UI and added direct links to the GitHub repository for quick access to tutorials.
+This marks the first ready-to-use release of **FGTD**. After extensive internal development, this version introduces major stability and performance upgrades:
+
+### 🧠 AI-Powered Core
+- **Conceptual Ranking**: Replaced keyword matching with an **AI-Powered Relevance Score**. Using **Qdrant vector search**, the system now ranks papers by conceptual similarity, understanding the context of your research.
+- **Improved Similarity Map**: A refined algorithm for more accurate clustering and visualization of related works.
+
+### 🎨 Export & Visuals
+- **Vector Graphics (SVG)**: You can now export your similarity maps and graphs in high-quality SVG format, ready for academic publications and presentations.
+- **Focus Mode**: Introduced a distraction-free interface to help you concentrate on analysis without UI clutter.
+
+### 🛠️ Technical Improvements
+- **JSON Data Management**: Save and load your compilation data in JSON format for better portability and stability.
+- **gotoGeo Navigation**: New direct access button to instantly jump to query check pages.
+- **Deep Integration**: Added hyperlinks within the map to directly access similar papers and external tutorial resources.
 
 ## Architecture Overview
 FGTD is structured in two main layers:
@@ -292,9 +295,6 @@ Below a representation of the displayed Reference score:
 ![image](https://github.com/user-attachments/assets/8e1ea7b5-7f14-4d1a-a6f9-d631bb5d6ca9)
 
 ![image](https://github.com/user-attachments/assets/58c10255-f0ce-4862-a881-af613ad1aa19)
-
-
-
 
 
 
