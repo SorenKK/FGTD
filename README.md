@@ -52,7 +52,8 @@ sudo apt install libfuse2
 # Search Form Overview
 Once the application is launched, you will be presented with the following **search form module**, which needs to be filled out to start the analysis:
 
-![Screenshot 2025-06-18 081857](https://github.com/user-attachments/assets/cd139f5f-df80-4321-b564-27d38cdebfd8)
+<img width="786" height="1342" alt="Screenshot 2026-04-15 134213" src="https://github.com/user-attachments/assets/5ce22a9d-180e-4d90-b574-ab0bdb1c373a" />
+
 
 At the top of the form, you are asked to enter an **email address**.  
 This is required solely to access the **PubMed API**, as it is mandated by NCBI.  
@@ -124,7 +125,7 @@ The final setting is the **analysis mode**:
 
 Choose the mode based on the **depth vs speed** trade-off that suits your research.
 Now it's possibile to click on "Start Scraping" to start the analysis. 
-
+You can now save and load your queries in .json file-format
 # Processing Phase
 
 Once the analysis is launched, the app navigates to the **processing page**, where you can monitor the progress in real time.
@@ -223,6 +224,7 @@ The **keyword and MeSH term columns** (`0` or `1`) allow binary filtering:
 ---
 
 ![Screenshot 2025-06-18 101243](https://github.com/user-attachments/assets/ee184760-ca56-496e-bcc8-24001cfbb9e7)
+<img width="3762" height="332" alt="Screenshot 2026-04-15 115841" src="https://github.com/user-attachments/assets/973c74e8-1ac2-4235-8f1a-eb14dbaad1ee" />
 
 
 ---
@@ -292,7 +294,8 @@ Below a representation of the displayed Reference score:
 
 ![image](https://github.com/user-attachments/assets/045a8654-d74c-4f9d-9c57-bc58a361ad01)
 
-![image](https://github.com/user-attachments/assets/8e1ea7b5-7f14-4d1a-a6f9-d631bb5d6ca9)
+<img width="3705" height="1287" alt="Screenshot 2026-04-15 115815" src="https://github.com/user-attachments/assets/1bfc1da8-fd97-497e-8250-a4a4d9b8cb49" />
+
 
 ![image](https://github.com/user-attachments/assets/58c10255-f0ce-4862-a881-af613ad1aa19)
 
