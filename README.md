@@ -223,7 +223,6 @@ The **keyword and MeSH term columns** (`0` or `1`) allow binary filtering:
 
 ---
 
-![Screenshot 2025-06-18 101243](https://github.com/user-attachments/assets/ee184760-ca56-496e-bcc8-24001cfbb9e7)
 <img width="3762" height="332" alt="Screenshot 2026-04-15 115841" src="https://github.com/user-attachments/assets/973c74e8-1ac2-4235-8f1a-eb14dbaad1ee" />
 
 
