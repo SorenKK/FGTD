@@ -905,9 +905,11 @@ def extract_date(status): #accetta status per estrarre data
 def create_output_file(dataframe, query, file_type):
     random_number = random.randint(1, 10000)
     random_letter = random.choice(string.ascii_letters)
-    
+    safe_query = re.sub(r'[\\/*?:"<>|()\[\]]', '_', query)
+    safe_query = re.sub(r'_+', '_', safe_query)
+    safe_query = safe_query.strip('_ ')[:20] 
     if file_type.lower() == 'excel':
-        file_name = f"{query}_analysis_{random_number}{random_letter}.xlsx"
+        file_name = f"{safe_query}_analysis_{random_number}{random_letter}.xlsx"
 
         dataframe.to_excel(file_name, index=False)
         
@@ -1915,7 +1917,7 @@ def process_data(query, email, num_pages1=2, keyword1="tumor,bladder", m_s="Red,
     }
 if __name__ == "__main__":
     query = "breast cancer"
-    email= ""
+    email= "@example.com"
     num_pages1 = 3
     keyword1 = "breast,tumor,immunotherapy,chemotherapy,rna,dna,protein"
     m_s = "Human, Mice"
