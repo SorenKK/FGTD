@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 # Aggiungi questi import in cima ad app.py
 # Assicurati che lo scraper importi correttamente le sue dipendenze
-from scraper import search_total_pages_and_series_count, process_data
+from scraper import search_total_pages_and_series_count, process_data, build_driver
 from flask_cors import CORS
 import logging
 import queue
@@ -9,12 +9,7 @@ import sys
 import os
 import multiprocessing  # <--- IMPORT NECESSARIO PER WINDOWS
 
-# --- IMPORT PER SELENIUM CORRETTO ---
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-# ------------------------------------
-
+# La costruzione del WebDriver vive in scraper.py (build_driver): qui non si configura Chrome.
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -39,13 +34,17 @@ log_queue = queue.Queue()
 # (sys._MEIPASS è spesso sola lettura, meglio usare la home utente o la cartella temp)
 log_path = os.path.join(os.path.expanduser('~'), 'app_logs.txt')
 
+# force=True e' necessario: importando scraper (in cima a questo file) viene
+# gia' configurato il root logger, quindi senza force questa chiamata sarebbe
+# un no-op e la FileHandler non verrebbe mai installata (app_logs.txt vuoto).
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(log_path),
         logging.StreamHandler(sys.stdout)
-    ]
+    ],
+    force=True
 )
 
 class QueueHandler(logging.Handler):
@@ -75,29 +74,6 @@ def stream_logs():
                 break
     return app.response_class(generate_logs(), mimetype='text/event-stream')
 
-def _build_chrome_driver() -> webdriver.Chrome:
-    """Factory centralizzata per il WebDriver.
-    Usa ChromeDriverManager per trovare/scaricare automaticamente il driver
-    compatibile sia in sviluppo che nell'AppImage PyInstaller.
-    Centralizzare qui evita duplicazioni e garantisce che tutte le route
-    usino esattamente le stesse opzioni Chrome.
-    """
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--log-level=3')
-    options.add_argument('--incognito')
-    options.add_argument('--start-maximized')
-    prefs = {
-        "profile.default_content_setting_values.geolocation": 2,
-        "profile.default_content_setting_values.notifications": 2,
-    }
-    options.add_experimental_option("prefs", prefs)
-    service = Service(ChromeDriverManager().install())
-    return webdriver.Chrome(service=service, options=options)
-
-
 @app.route('/api/check_query', methods=['POST'])
 def check_query():
     try:
@@ -112,23 +88,15 @@ def check_query():
 
         logging.info(f"📊 Checking query: {query} (Filters applied: {apply_filters})")
 
-        # --- SETUP SELENIUM CORRETTO PER EXE ---
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        
-        # Nascondi i log di console di Selenium/Chromedriver (opzionale ma pulito)
-        options.add_argument("--log-level=3") 
-        
-        # IMPORTANTE: Usa ChromeDriverManager anche qui!
-        # Altrimenti l'EXE non trova il driver sul computer dell'utente
-        driver = webdriver.Chrome(options=options)
-        # ---------------------------------------
+        # Il browser (imbarcato o di sistema) viene risolto da build_driver in scraper.py.
+        driver = build_driver()
 
-        total_pages, series_count = search_total_pages_and_series_count(query, driver, filters)
-
-        driver.quit()
+        try:
+            total_pages, series_count = search_total_pages_and_series_count(query, driver, filters)
+        finally:
+            # quit() anche in caso di errore, altrimenti ogni check fallito
+            # lascia in giro un processo Chrome orfano.
+            driver.quit()
 
         return jsonify({
             "status": "success",
@@ -138,7 +106,6 @@ def check_query():
 
     except Exception as e:
         logging.error(f"❌ Error in check_query: {str(e)}")
-        return jsonify({"status": "error", "message": str(e)}), 500
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -157,7 +124,8 @@ def search():
         remove = data.get('remove', True)
         apply_filters = data.get('apply_filters', False)
         filters = data.get('filters', {}) if apply_filters else None
-        
+        api_key = data.get('api_key')   # facoltativa: NCBI API key dell'utente
+
         if not query or not email:
             logging.error("Query and email are required")
             return jsonify({"status": "error", "message": "Query and email are required"}), 400   
@@ -165,7 +133,7 @@ def search():
         logging.info(f"Starting search for query: {query} with email: {email}")
         num_pages = int(num_pages) if num_pages else 2
         
-        result = process_data(query, email, num_pages, keywords, m_s, file_type, mode, generate_file=generate_file, remove=remove, filters=filters)
+        result = process_data(query, email, num_pages, keywords, m_s, file_type, mode, generate_file=generate_file, remove=remove, filters=filters, api_key=api_key)
         
         logging.info("Search completed successfully") 
         return jsonify({

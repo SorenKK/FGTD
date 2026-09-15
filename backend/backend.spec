@@ -3,38 +3,55 @@
 import os
 import sys
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy_metadata
-from PyInstaller.building.build_main import Analysis, PYZ, EXE
+from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
 
-# --- CONFIGURAZIONE ---
-# Aumentiamo il limite per gestire le librerie AI
-sys.setrecursionlimit(5000)
+# =====================================================
+# CONFIGURAZIONE AI (NUOVA)
+# =====================================================
+sys.setrecursionlimit(5000) # Necessario per Torch/SentenceTransformers
 
 block_cipher = None
 
-# --- PERCORSI (Dal tuo vecchio spec funzionante) ---
-python_main = r'C:\Users\UN2\AppData\Local\Programs\Python\Python312'
-python_dlls = os.path.join(python_main, 'DLLs')
+# =====================================================
+# Determina la directory corrente (DAL TUO VECCHIO SPEC LINUX)
+# =====================================================
+try:
+    this_dir = os.path.abspath(os.path.dirname(__file__))
+except NameError:
+    this_dir = os.getcwd()
 
-venv_path = r'C:\Users\UN2\Desktop\1.0.3_fgtd\venv'
-venv_site_packages = os.path.join(venv_path, 'Lib', 'site-packages')
+# =====================================================
+# Percorso del Virtual Environment (DAL TUO VECCHIO SPEC LINUX)
+# =====================================================
+venv_path = os.path.abspath(os.path.join(this_dir, '..', 'venv'))
+# Nota: Assicurati che la versione python nel path sia corretta (es. 3.10)
+venv_site_packages = os.path.join(venv_path, 'lib', 'python3.10', 'site-packages')
 
-# --- HIDDEN IMPORTS ---
-# Ho unito i tuoi vecchi import con quelli NECESSARI per l'AI
+# =====================================================
+# Percorsi di Python e librerie dinamiche (DAL TUO VECCHIO SPEC LINUX)
+# =====================================================
+python_main = '/usr/lib/python3.10'
+if os.path.exists(os.path.join(python_main, 'lib-dynload')):
+    python_dlls = os.path.join(python_main, 'lib-dynload')
+elif os.path.exists('/usr/lib/x86_64-linux-gnu/lib-dynload'):
+    python_dlls = '/usr/lib/x86_64-linux-gnu/lib-dynload'
+else:
+    python_dlls = os.path.join(python_main, 'lib-dynload')
+
+# =====================================================
+# Hidden Imports (FUSIONE VECCHIO + NUOVO AI)
+# =====================================================
 hidden_imports = [
-    # --- I tuoi vecchi import funzionanti ---
-    'ctypes.util', 'ctypes.macholib.dyld', 'pyexpath',
-    'lib2to3.pgen2.driver', 'lib2to3.pygram', 'lib2to3.patcomp',
-    'selenium', 'bs4', 'pandas', 'ctypes', 'numpy',
-    'Bio', 'Bio.Entrez', 'Bio.Medline',
+    # --- I TUOI VECCHI IMPORT ---
+    'ctypes.util', 'pyexpath', 'lib2to3.pgen2.driver', 'lib2to3.pygram', 'lib2to3.patcomp',
+    'selenium', 'bs4', 'pandas', 'ctypes', 'Bio', 'Bio.Entrez', 'Bio.Medline',
     'selenium.webdriver.chrome.service', 'selenium.webdriver.common.by',
     'selenium.webdriver.support.ui', 'selenium.webdriver.support.expected_conditions',
     'selenium.common.exceptions',
-    'webdriver_manager.chrome',
-    'flask', 'flask_cors', 'logging', 'queue', 'html5lib', 'scraper','json', 'urllib.parse'
-    'pkg_resources.py2_warn',
-    
-    # --- NUOVI IMPORT PER QDRANT E SENTENCE TRANSFORMERS ---
-    # (Senza questi l'app crasha appena provi a caricare il modello)
+    'flask', 'flask_cors', 'logging', 'queue', 'html5lib', 'scraper',
+    'pkg_resources.py2_warn', 'json', 'urllib.parse',
+
+    # --- NUOVI IMPORT PER AI (QDRANT / SENTENCE TRANSFORMERS) ---
     'sentence_transformers',
     'qdrant_client',
     'qdrant_client.http',
@@ -48,8 +65,9 @@ hidden_imports = [
     'sklearn.tree._utils'
 ]
 
-# --- DATAS ---
-# Qui uniamo i tuoi vecchi datas con i metadati necessari per l'AI
+# =====================================================
+# Datas (FUSIONE VECCHIO + NUOVO AI)
+# =====================================================
 datas = (
     # --- I TUOI VECCHI DATAS ---
     collect_data_files('flask') + 
@@ -59,7 +77,6 @@ datas = (
     collect_data_files('openpyxl') +
     collect_data_files('werkzeug') +
     collect_data_files('requests') +
-    collect_data_files('webdriver_manager') +
 
     # --- NUOVI DATI AI ---
     collect_data_files('sentence_transformers') +
@@ -79,20 +96,23 @@ datas = (
     copy_metadata('torch')
 )
 
-# --- BINARIES (Dal tuo vecchio spec funzionante) ---
+# =====================================================
+# Binaries (DAL TUO VECCHIO SPEC LINUX)
+# =====================================================
 additional_binaries = [
-    (os.path.join(python_dlls, 'pyexpat.pyd'), '.'),
-    (os.path.join(python_dlls, '_socket.pyd'), '.'),
-    (os.path.join(python_dlls, '_ssl.pyd'), '.'),
-    (os.path.join(python_dlls, '_hashlib.pyd'), '.'),
-    (os.path.join(python_dlls, 'unicodedata.pyd'), '.'),
-    (os.path.join(python_dlls, 'select.pyd'), '.')
+    (os.path.join(python_dlls, '_ssl.cpython-310-x86_64-linux-gnu.so'), '.'),
+    (os.path.join(python_dlls, '_hashlib.cpython-310-x86_64-linux-gnu.so'), '.'),
+    # Se servivano nel vecchio, meglio lasciarli. PyInstaller spesso li trova da solo, 
+    # ma se avevi problemi di SSL, questo li risolve.
 ]
 
+# =====================================================
+# Analysis
+# =====================================================
 a = Analysis(
     ['app.py', 'scraper.py'],
     pathex=[
-        os.path.abspath(os.path.dirname("app.py")),
+        this_dir,
         python_main,
         python_dlls,
         venv_site_packages
@@ -101,34 +121,46 @@ a = Analysis(
     datas=datas,
     hiddenimports=hidden_imports,
     hookspath=[],
-    hooksconfig={},
     runtime_hooks=[],
-    excludes=['tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter'], # Exclude GUI stuff
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
+    # Escludiamo GUI inutili
+    excludes=['tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'matplotlib', 'PyQt5'],
     cipher=block_cipher,
     noarchive=False
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# =====================================================
+# EXE (MODIFICATO PER APPIMAGE -> CARTELLA)
+# =====================================================
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
     [],
+    exclude_binaries=True, # IMPORTANTE: True crea una cartella, non un file singolo
     name='backend',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=False,
-    upx_exclude=[],
-    runtime_tmpdir=None,
+    upx=True,
     console=True,
     disable_windowed_traceback=False,
+    argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None
+)
+
+# =====================================================
+# COLLECTION (PER CREARE LA CARTELLA dist/backend)
+# =====================================================
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='backend'
 )

@@ -1,73 +1,100 @@
 {
-    "name": "fgtd",
-    "version": "1.0.0",
-    "description": "App for web scraping of PubMed & GEO",
-    "main": "main.js",
-    "scripts": {
-        "start": "concurrently --kill-others \"npm run start-react\" \"npm run start-electron\"",
-        "start-react": "cd frontend && npm start",
-        "start-flask": "cd backend && dist\\backend.exe",
-        "start-electron": "wait-on http://localhost:3000 && electron .",
-        "build": "npm run build-react && electron-builder",
-        "build-react": "cd frontend && npm run build",
-        "package": "npm run build"
+  "name": "fgtd",
+  "version": "1.0.0",
+  "description": "App for web scraping of PubMed & GEO",
+  "main": "main.js",
+  "homepage": "https://github.com/SorenKK/FGTD",
+  "author": {
+    "name": "Francesco Orilio",
+    "email": "francesco.orilio@example.com"
+  },
+  "scripts": {
+    "start": "concurrently --kill-others \"npm run start-react\" \"npm run start-electron\"",
+    "start-react": "cd frontend && npm start",
+    "start-electron": "wait-on http://localhost:3000 && electron .",
+    "build": "npm run build-react && electron-builder",
+    "build-react": "cd frontend && npm run build",
+    "package": "npm run build"
+  },
+  "build": {
+    "appId": "com.github.sorenkk.fgtd",
+    "productName": "FGTD.ai",
+    "icon": "assets/icons/512x512.png",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
     },
-    "build": {
-        "appId": "com.example.fgtdapp",
-        "productName": "FGTD.ai",
-        "directories": {
-            "output": "dist",
-            "buildResources": "assets"
-        },
-        "files": [
-            "main.js",
-            "preload.js",
-            "frontend/build/**/*",
-            "!frontend/build/static/js/*.map",
-            "!frontend/build/static/css/*.map",
-            "!frontend/node_modules/**/*",
-            "!backend/node_modules/**/*"
-        ],
-        "extraResources": [
-            {
-                "from": "backend/dist/backend.exe",
-                "to": "backend.exe"
-            }
-        ],
-        "win": {
-            "target": "nsis",
-            "icon": "assets/favicon.ico"
-        },
-        "mac": {
-            "target": "dmg"
-        },
-        "linux": {
-            "target": "AppImage"
-        }
+    "files": [
+      "main.js",
+      "preload.js",
+      "frontend/build/**/*",
+      "!frontend/build/static/js/*.map",
+      "!frontend/build/static/css/*.map",
+      "!frontend/node_modules/**/*",
+      "!backend/node_modules/**/*",
+      "!backend/venv/**/*",
+      "!backend/dist/**/*",
+      "!backend/build/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/Backend-x86_64.AppImage",
+        "to": "backend/Backend-x86_64.AppImage"
+      },
+      {
+        "from": "backend/vendor",
+        "to": "backend/vendor"
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Science",
+      "maintainer": "Francesco Orilio <francesco98.orilio@gmail.com>",
+      "executableName": "fgtd",
+      "icon": "assets/icons"
     },
-    "dependencies": {
-        "autoprefixer": "^10.4.20",
-        "concurrently": "^7.6.0",
-        "html-react-parser": "^5.2.2",
-        "natural": "^8.0.1",
-        "postcss": "^8.4.47",
-        "react-icons": "^5.3.0",
-        "recharts": "^2.15.0",
-        "styled-components": "^6.1.13",
-        "tailwindcss": "^3.4.13",
-        "tree-kill": "^1.2.2",
-        "xlsx": "^0.18.5",
-        "xlsx-style": "^0.8.13"
+    "deb": {
+      "depends": [
+        "libnss3",
+        "libgbm1",
+        "libatk-bridge2.0-0",
+        "libxkbcommon0",
+        "libxdamage1",
+        "libxrandr2",
+        "libpango-1.0-0",
+        "libcairo2",
+        "libatspi2.0-0"
+      ]
     },
-    "devDependencies": {
-        "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-        "concurrently": "^7.6.0",
-        "electron": "^33.1.0",
-        "electron-builder": "^23.6.0",
-        "path-browserify": "^1.0.1",
-        "react-app-rewired": "^2.2.1",
-        "wait-on": "^8.0.1"
-    },
-    "author": "Francesco Orilio",
-    "license": "MIT"
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^7.6.0",
+    "html-react-parser": "^5.2.2",
+    "natural": "^8.0.1",
+    "postcss": "^8.4.47",
+    "react-icons": "^5.3.0",
+    "recharts": "^2.15.0",
+    "styled-components": "^6.1.13",
+    "tailwindcss": "^3.4.13",
+    "tree-kill": "^1.2.2",
+    "xlsx": "^0.18.5",
+    "xlsx-style": "^0.8.13"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "concurrently": "^7.6.0",
+    "electron": "^33.1.0",
+    "electron-builder": "^23.6.0",
+    "path-browserify": "^1.0.1",
+    "react-app-rewired": "^2.2.1",
+    "wait-on": "^8.0.1"
+  },
+  "license": "MIT"
 }

@@ -1,7 +1,33 @@
 venv/
 node_modules/
-backend/build/
 dist/
+build/
 *.dll
 *.exe
 __pycache__/
+*.pyc
+
+# Artefatti di build del backend. Sono rigenerati da PyInstaller + appimagetool a
+# ogni ricostruzione e pesano centinaia di MB: AppDir contiene 6222 file e
+# l'AppImage da solo supera i 100MB, il limite oltre cui GitHub rifiuta il push.
+# I binari delle release vanno allegati alla pagina Releases, non committati.
+backend/dist/
+backend/build/
+backend/AppDir/
+*.AppImage
+backend/vendor/
+
+# Copie di backup locali: prima di modificare un file se ne salva una copia con un
+# numero in coda (app.py -> app1.py, SearchForm.js -> SearchForm1.js). Servono per il
+# diff manuale e il rollback, restano solo sulla macchina.
+# I percorsi sono ancorati apposta: un pattern generico tipo *[0-9].py escluderebbe
+# migliaia di file legittimi dentro backend/AppDir/usr/bin/_internal (torch, ecc).
+/main[0-9]*.js
+/preload[0-9]*.js
+/package[0-9]*.json
+/.gitignore[0-9]*
+/backend/app[0-9]*.py
+/backend/scraper[0-9]*.py
+/backend/backend[0-9]*.spec
+/backend/requirements[0-9]*.txt
+/frontend/src/components/*[0-9].js

@@ -1,0 +1,12 @@
+flask
+flask_cors
+bs4
+selenium
+pandas
+biopython
+openpyxl
+werkzeug
+requests
+numpy
+sentence-transformers
+qdrant-client

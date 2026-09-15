@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
-#from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -29,7 +28,6 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 from math import log1p
 from datetime import datetime, date
 from datetime import datetime, date
-# --- NUOVI IMPORT PER QDRANT ---
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from sentence_transformers import SentenceTransformer
@@ -43,6 +41,212 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # Inizializza Qdrant in memoria (RAM). I dati spariscono alla chiusura, perfetto per questo uso.
 qdrant = QdrantClient(":memory:")
+
+
+####################################################RISOLUZIONE DEL BROWSER
+#
+# Fino alla 1.0.3 il WebDriver veniva costruito in tre punti diversi, ognuno con
+# la propria configurazione, e il browser usato era "quello installato sulla
+# macchina". Questo rende l'applicazione non riproducibile: un aggiornamento
+# automatico di Chrome/Chromium (tipicamente lo snap di Ubuntu, che si aggiorna
+# da solo) cambia il comportamento del browser senza che il codice cambi di una
+# riga, e lo scraping smette di funzionare.
+#
+# Qui il browser diventa una dipendenza versionata dell'applicazione, come
+# selenium o pandas: si usa Chrome for Testing, di cui Google pubblica per ogni
+# versione il binario Chrome *e* il chromedriver appaiato, garantiti compatibili
+# tra loro e scaricabili da URL immutabili.
+#
+# Ordine di risoluzione, dal piu' deterministico al piu' opportunistico:
+#   A. Override via variabili d'ambiente (debug/sviluppo).
+#   B. Browser imbarcato nell'app: il caso dell'utente finale, che apre
+#      l'AppImage e non deve installare ne' scaricare nulla.
+#   C. Chrome di sistema, purche' NON sia uno snap.
+#   D. Selenium Manager, che si arrangia da solo.
+
+# Versione di Chrome for Testing imbarcata. Deve restare allineata a
+# tools/fetch_chrome.sh, che usa la stessa stringa per costruire gli URL di
+# download. Da cambiare solo deliberatamente.
+CHROME_VERSION = "153.0.8010.36"
+
+# Nomi delle cartelle prodotte dagli zip di Chrome for Testing, lasciati identici
+# all'archivio originale per rendere ovvia la provenienza dei file.
+_CHROME_SUBPATH = os.path.join("chrome-linux64", "chrome")
+_DRIVER_SUBPATH = os.path.join("chromedriver-linux64", "chromedriver")
+
+# Candidati di sistema, in ordine di preferenza. Chromium e' in fondo perche' su
+# Ubuntu e' quasi sempre lo snap, che viene comunque scartato subito dopo.
+_SYSTEM_CHROME_CANDIDATES = [
+    "/opt/google/chrome/chrome",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+]
+
+
+def _is_snap(path):
+    """True se il path e' (o punta a) un pacchetto snap.
+
+    Non basta guardare la stringa: /snap/bin/chromium e' un symlink a
+    /usr/bin/snap, quindi si controlla anche il target risolto.
+    """
+    try:
+        real = os.path.realpath(path)
+    except OSError:
+        return False
+    return "/snap/" in real or real.endswith("/snap") or "/snap/" in path
+
+
+def _vendor_base_dirs():
+    """Directory in cui cercare la cartella vendor/, in ordine di priorita'."""
+    dirs = []
+
+    # L'ambiente lo sa meglio di noi: Electron passa questa variabile al backend
+    # quando lo lancia, cosi' il percorso funziona sia in sviluppo sia dentro
+    # l'AppImage impacchettato, senza che Python debba indovinarlo.
+    env_vendor = os.environ.get("FGTD_VENDOR_DIR")
+    if env_vendor:
+        dirs.append(env_vendor)
+
+    # PyInstaller scompatta le risorse in una directory temporanea.
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        dirs.append(os.path.join(sys._MEIPASS, "vendor"))
+
+    # AppImage: $APPDIR e' la radice del filesystem montato.
+    appdir = os.environ.get("APPDIR")
+    if appdir:
+        dirs.append(os.path.join(appdir, "usr", "bin", "vendor"))
+
+    # Sviluppo: backend/vendor/ accanto a questo file.
+    dirs.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor"))
+
+    # Accanto all'eseguibile, per impacchettamenti non previsti sopra.
+    dirs.append(os.path.join(os.path.dirname(os.path.abspath(sys.executable)), "vendor"))
+
+    return dirs
+
+
+def _bundled_browser_pair():
+    """Cerca la coppia chrome+chromedriver imbarcata. (None, None) se assente."""
+    for base in _vendor_base_dirs():
+        chrome = os.path.join(base, _CHROME_SUBPATH)
+        driver = os.path.join(base, _DRIVER_SUBPATH)
+        if os.path.isfile(chrome) and os.path.isfile(driver):
+            # L'estrazione da zip o la copia da parte di electron-builder possono
+            # perdere il bit di esecuzione: lo rimettiamo qui, invece di fallire
+            # con un opaco "Permission denied" al primo avvio sulla macchina
+            # dell'utente.
+            for path in (chrome, driver):
+                if not os.access(path, os.X_OK):
+                    try:
+                        os.chmod(path, 0o755)
+                        logging.info(f"Permessi di esecuzione ripristinati su {path}")
+                    except OSError as e:
+                        logging.warning(f"Impossibile rendere eseguibile {path}: {e}")
+            return chrome, driver
+    return None, None
+
+
+def _system_chrome():
+    """Primo Chrome di sistema utilizzabile, scartando gli snap."""
+    for candidate in _SYSTEM_CHROME_CANDIDATES:
+        if not os.path.isfile(candidate):
+            continue
+        if _is_snap(candidate):
+            logging.warning(
+                f"Ignoro {candidate}: e' uno snap, e il confinement impedisce a "
+                "chromedriver di leggere DevToolsActivePort (la sessione non parte)."
+            )
+            continue
+        return candidate
+    return None
+
+
+def resolve_browser():
+    """Ritorna (chrome_binary, chromedriver_path).
+
+    None significa "non specificare, lascia decidere a Selenium": per il binario
+    vuol dire usare il Chrome di default del sistema, per il driver vuol dire
+    delegare a Selenium Manager il download della versione corretta.
+    """
+    # A. Override espliciti: per provare una versione diversa di Chrome senza
+    #    toccare il codice ne' ricostruire il pacchetto.
+    env_chrome = os.environ.get("FGTD_CHROME_BINARY")
+    env_driver = os.environ.get("FGTD_CHROMEDRIVER")
+    if env_chrome or env_driver:
+        logging.info("Browser da variabili d'ambiente (override esplicito)")
+        return env_chrome or None, env_driver or None
+
+    # B. Browser imbarcato: il percorso normale per l'utente finale.
+    chrome, driver = _bundled_browser_pair()
+    if chrome:
+        logging.info(f"Browser imbarcato, Chrome for Testing {CHROME_VERSION}")
+        return chrome, driver
+
+    # C. Chrome di sistema non-snap.
+    chrome = _system_chrome()
+    if chrome:
+        logging.warning(
+            f"Browser imbarcato non trovato, uso quello di sistema ({chrome}). "
+            "Attenzione: questa versione puo' cambiare a ogni aggiornamento del sistema."
+        )
+        return chrome, None
+
+    # D. Ultima spiaggia.
+    logging.warning(
+        "Nessun browser noto trovato: delego a Selenium Manager. "
+        "Se lo scraping fallisce, lancia tools/fetch_chrome.sh per imbarcare Chrome."
+    )
+    return None, None
+
+
+def build_driver(headless=None):
+    """Costruisce il WebDriver Chrome usato da tutta l'applicazione.
+
+    headless: True/False per forzare la modalita'. Se None (default) si legge
+    FGTD_HEADLESS, che vale 1 salvo diversa indicazione: in produzione il browser
+    non deve mai comparire, mentre in debug basta esportare FGTD_HEADLESS=0 per
+    vedere cosa sta facendo lo scraper, senza modificare il codice.
+    """
+    if headless is None:
+        headless = os.environ.get("FGTD_HEADLESS", "1") != "0"
+
+    options = webdriver.ChromeOptions()
+
+    if headless:
+        # --headless=new e' l'implementazione corrente; il vecchio --headless e'
+        # deprecato e su Chrome recenti si comporta diversamente.
+        options.add_argument("--headless=new")
+
+    options.add_argument("--log-level=3")
+    options.add_argument("--incognito")
+    options.add_argument("--start-maximized")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+
+    # 2 = "blocca": evita che le pagine NCBI facciano comparire richieste di
+    # permessi, che bloccherebbero lo scraping in attesa di una risposta.
+    options.add_experimental_option("prefs", {
+        "profile.default_content_setting_values.geolocation": 2,
+        "profile.default_content_setting_values.notifications": 2,
+    })
+
+    binary, driver_path = resolve_browser()
+    if binary:
+        options.binary_location = binary
+
+    logging.info(
+        f"Avvio WebDriver (headless={headless}) con "
+        f"chrome={binary or 'default di sistema'}, "
+        f"driver={driver_path or 'Selenium Manager'}"
+    )
+
+    if driver_path:
+        return webdriver.Chrome(service=Service(driver_path), options=options)
+    return webdriver.Chrome(options=options)
+
 
 ####################################################FUNZIONI PER I FILTRI
 def _expand_filters(driver):
@@ -581,34 +785,55 @@ def get_resource_path(relative_path):
     return os.path.join(application_path, relative_path)
 
 
-def fetch_mesh_terms(pmid, max_retries=1):
-    for attempt in range(max_retries):
-        try:
-            handle = Entrez.efetch(db="pubmed", id=pmid, rettype="medline", retmode="text")
-            records = Medline.parse(handle)
-            mesh_terms = []
-            for record in records:
-                if "MH" in record:
-                    cleaned_terms = [term.strip() for term in record["MH"]]
-                    mesh_terms.extend(cleaned_terms)
-            handle.close()
-            
-            if not mesh_terms:
-                return "No MeSH terms found"
-            else:
-                return mesh_terms
-        
-        except Exception as e:
-            if attempt < max_retries - 1:  # se non è l'ultimo tentativo
-                wait_time = (2 ** attempt) + random.uniform(0, 1) - random.uniform(0.005,0.010)  # backoff esponenziale con jitter
-                logging.warning(f"Error retrieving MeSH terms for PMID {pmid}. Retrying in {wait_time:.2f} seconds.")
-                logging.error(f"Details error: {str(e)}")
-                time.sleep(wait_time)
-            else:
-                logging.error("Failed to retrieve MeSH terms for PMID {pmid} after {max_retries} attempts.")
-                return f"Error fetching MeSH terms for PMID {pmid}: {str(e)}"
+# Titolo, abstract e MeSH terms stanno tutti nello stesso record Medline.
+# Scaricarlo una volta sola per PMID evita tre efetch identici verso NCBI.
+_medline_cache = {}
 
-    return f"Failed to fetch MeSH terms for PMID {pmid} after {max_retries} attempts"
+
+def reset_medline_cache():
+    """Svuota la cache: va chiamata all'inizio di ogni run."""
+    _medline_cache.clear()
+
+
+def fetch_medline_record(pmid):
+    """Record Medline per il PMID, preso dalla cache se gia' scaricato.
+
+    Restituisce il record parsato, oppure None se il download fallisce.
+    I fallimenti non vengono messi in cache, cosi' una chiamata successiva
+    puo' ritentare come faceva il codice precedente.
+    """
+    if not pmid:
+        return None
+
+    key = str(pmid)
+    if key in _medline_cache:
+        return _medline_cache[key]
+
+    try:
+        time.sleep(0.10)
+        handle = Entrez.efetch(db="pubmed", id=key, rettype="medline", retmode="text")
+        raw = handle.read()
+        handle.close()
+        record = Medline.read(StringIO(raw))
+    except Exception as e:
+        logging.error(f"Error fetching Medline record for PMID {key}: {e}")
+        return None
+
+    _medline_cache[key] = record
+    return record
+
+
+def fetch_mesh_terms(pmid, max_retries=1):
+    record = fetch_medline_record(pmid)
+    if record is None:
+        return f"Error fetching MeSH terms for PMID {pmid}"
+
+    mesh_terms = [term.strip() for term in record.get("MH", [])]
+    if not mesh_terms:
+        return "No MeSH terms found"
+    return mesh_terms
+
+
 def extract_summary(page_source):
     try:
         soup = BeautifulSoup(page_source, 'html.parser')
@@ -625,18 +850,11 @@ def extract_summary(page_source):
         return None
 
 def fetch_abstract(pmid):
-  time.sleep(0.10)
-  handle = Entrez.efetch(db="pubmed", id=pmid, rettype="Medline", retmode="text")
-  rec = handle.read()
-  handle.close()
-  
-  rec_file = StringIO(rec)
-  medline_rec = Medline.read(rec_file)
-  
-  if "AB" in medline_rec:
-    return medline_rec["AB"]
-  else:
-    return None
+    record = fetch_medline_record(pmid)
+    if record is None:
+        return None
+    return record.get("AB")
+
 
 def search_total_pages_and_series_count(query, driver, filters=None):
     try:
@@ -1108,6 +1326,8 @@ def calculate_textual_scores(df: pd.DataFrame, search_keywords: list, target_mes
     # ---------------------------------------------------------
     # 1. CALCOLO K_SCORE (Keyword Match - Champion Logic)
     # ---------------------------------------------------------
+    k_weight_active = False
+
     if not search_keywords:
         df['K_score'] = 0.0
     else:
@@ -1127,7 +1347,8 @@ def calculate_textual_scores(df: pd.DataFrame, search_keywords: list, target_mes
             else:
                 ratio = df['K_count'] / max_found_in_batch
                 df['K_score'] = ratio.pow(1.35)
-            
+                k_weight_active = True
+
             df.drop(columns=['K_count'], inplace=True)
 
     # ---------------------------------------------------------
@@ -1231,11 +1452,26 @@ def calculate_textual_scores(df: pd.DataFrame, search_keywords: list, target_mes
     w_k = 0.30  
     w_m = 0.20  
     
-    if not m_weight_active:
+    # Un componente che non ha trovato nulla e' una colonna di zeri: lasciargli il
+    # suo peso significa buttarne via una frazione e comprimere tutte le Relevance
+    # verso il basso. Il peso orfano va ridistribuito sui componenti attivi.
+    if not m_weight_active and not k_weight_active:
+        logging.info("⚠️ MeSH and keyword scores inactive. Semantic score takes the full weight.")
+        w_s = 1.00
+        w_k = 0.00
+        w_m = 0.00
+    elif not m_weight_active:
         logging.info("⚠️ MeSH score inactive. Redistributing weights.")
         w_s = 0.60
         w_k = 0.40
         w_m = 0.00
+    elif not k_weight_active:
+        # Stesso criterio del ramo MeSH: il 0.30 orfano va a semantico e MeSH
+        # in proporzione ai loro pesi originali (0.50 : 0.20), arrotondato.
+        logging.info("⚠️ Keyword score inactive. Redistributing weights.")
+        w_s = 0.70
+        w_k = 0.00
+        w_m = 0.30
 
     df['T_score'] = (df['S_score'] * w_s) + (df['K_score'] * w_k) + (df['M_score'] * w_m)
     
@@ -1307,17 +1543,11 @@ def fetch_citation_count(pmid):
         return 0
 
 def extract_PMID_tile(pmid):
-    try:
-        handle = Entrez.efetch(db="pubmed", id=str(pmid), rettype="Medline", retmode="text")
-        record = handle.read()
-        handle.close()
-
-        medline_rec = Medline.read(StringIO(record))
-        title1 = medline_rec.get("TI", "Not found")
-        return title1
-    except Exception as e:
-        logging.error(f"Error fetching title for PMID {pmid}: {e}")
+    record = fetch_medline_record(pmid)
+    if record is None:
         return "Not found"
+    return record.get("TI", "Not found")
+
 
 def extract_study_type(page_source):
     try:
@@ -1339,7 +1569,7 @@ def extract_study_type(page_source):
     
     return None
     
-def process_data(query, email, num_pages1=2, keyword1="tumor,bladder", m_s="Red,Brown", file_type="excel", mode="normal", generate_file=True,remove=True,filters=None):
+def process_data(query, email, num_pages1=2, keyword1="tumor,bladder", m_s="Red,Brown", file_type="excel", mode="normal", generate_file=True,remove=True,filters=None,api_key=None):
     print(f"query: {query}")
     print(f"email: {email}")
     print(f"num_pages1: {num_pages1}")
@@ -1362,32 +1592,33 @@ def process_data(query, email, num_pages1=2, keyword1="tumor,bladder", m_s="Red,
 
     gse_counter = 0
     logging.info(f"Starting processing for the query: {query}")
-    #=ChromeDriverManager().install()
     try:
-        # Configura Chrome options
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--log-level=3')
-        options.add_argument('--incognito')
-        #driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
-        # Aggiungi ulteriori opzioni per la stabilità
-        options.add_argument('--start-maximized')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        #options.add_argument('--disable-gpu')
-        #options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        prefs = {"profile.default_content_setting_values.geolocation": 2,"profile.default_content_setting_values.notifications": 2}
-        options.add_experimental_option("prefs", prefs)
-
-        driver = webdriver.Chrome(options=options)
+        # Browser e opzioni sono centralizzati in browser.py: in produzione parte
+        # headless, in debug basta esportare FGTD_HEADLESS=0.
+        driver = build_driver()
         logging.info("WebDriver initialized successfully; no geolocation or notification will be used")
-        
+
     except Exception as e:
         logging.error(f"Error initializing WebDriver: {str(e)}")
         raise Exception(f"Error initializing Chrome: {str(e)}")
     
     columns = ["Title/PMID", "GSE", "Date", "Instrument_1","Instrument_2","Instrument_3", "Platform", "Organisms", "Samples_Count", "Samples_1","Samples_2","Samples_3", "Summary", "Series Matrix Link", "SOFT formatted family file(s) Link","MINiML formatted family file(s) Link","BioProject link","Geo2R", "Other link and GDV","SRA Run Selector",'Citations_Count', 'Study_Type_Extracted']
     Entrez.email = email
+
+    # NCBI API key: facoltativa. Senza chiave il limite e' 3 richieste/secondo,
+    # con chiave 10/s. Si ottiene gratis dal proprio account NCBI.
+    # Puo' arrivare dalla GUI oppure dalla variabile d'ambiente FGTD_NCBI_API_KEY.
+    resolved_api_key = (api_key or os.environ.get("FGTD_NCBI_API_KEY") or "").strip()
+    if resolved_api_key:
+        Entrez.api_key = resolved_api_key
+        logging.info("NCBI API key in use: request limit raised to 10/s.")
+    else:
+        Entrez.api_key = None
+        logging.info("No NCBI API key provided: request limit is 3/s.")
+
+    # Ogni run riparte con la cache pulita, altrimenti una ricerca successiva
+    # riuserebbe record scaricati in una ricerca precedente.
+    reset_medline_cache()
     keywords = []
     M_S = []
     
@@ -1866,12 +2097,22 @@ def process_data(query, email, num_pages1=2, keyword1="tumor,bladder", m_s="Red,
     
     # Rinomina per coerenza
     df.rename(columns={'T_score': 'T', 'B_score': 'B'}, inplace=True)
-    
-    # Formula finale
-    df['Relevance'] = (df['T'] * DEFAULT_T) + (df['B'] * DEFAULT_B)
-    df['Relevance_Display'] = df['Relevance'].round(3).astype(str)
-    
-    logging.info("Relevance scores calculated successfully")
+
+    # Se la ricerca non ha prodotto righe, le funzioni di scoring escono subito
+    # e le colonne T/B non esistono: senza questa guardia il calcolo qui sotto
+    # solleva KeyError e il frontend riceve un 500 al posto di "nessun risultato".
+    if df.empty or 'T' not in df.columns or 'B' not in df.columns:
+        logging.warning("No scorable rows: relevance calculation skipped.")
+        for col in ('T', 'B', 'Relevance'):
+            if col not in df.columns:
+                df[col] = pd.Series(dtype='float64')
+        df['Relevance_Display'] = pd.Series(dtype='object')
+    else:
+        # Formula finale
+        df['Relevance'] = (df['T'] * DEFAULT_T) + (df['B'] * DEFAULT_B)
+        df['Relevance_Display'] = df['Relevance'].round(3).astype(str)
+
+        logging.info("Relevance scores calculated successfully")
     
     # ============ FINE CALCOLO SCORE ============
 

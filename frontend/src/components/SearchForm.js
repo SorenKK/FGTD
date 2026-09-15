@@ -128,6 +128,7 @@ const FocusWrapper = ({ fieldId, isFocused, onFocus, onClose, children, descript
 const SearchForm = () => {
     
     const [email, setEmail] = useState('');
+    const [apiKey, setApiKey] = useState(''); // NCBI API key, facoltativa
     const [query, setQuery] = useState('');
     
     // --- STATI PER KEYWORDS (GENI) ---
@@ -158,6 +159,12 @@ const SearchForm = () => {
     const [subsetTypes, setSubsetTypes] = useState({});
     const [startDate, setStartDate] = useState({ year: '', month: '', day: '' });
     const [endDate, setEndDate] = useState({ year: '', month: '', day: '' });
+    // Il testo digitato va tenuto a parte: i campi data vivono dentro la modale dei
+    // filtri e chiudendola React smonta il DOM. Un input non controllato si
+    // ripresentava vuoto pur avendo lo stato ancora pieno, cosi' la data mostrata
+    // non era quella poi usata nella query.
+    const [startDateText, setStartDateText] = useState('');
+    const [endDateText, setEndDateText] = useState('');
     const [suppFiles, setSuppFiles] = useState('');
     const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
     const [checkLoading, setCheckLoading] = useState(false);
@@ -169,6 +176,7 @@ const SearchForm = () => {
     const [focusedField, setFocusedField] = useState(null); 
         const handleReset = () => {
         setEmail('');
+        setApiKey('');
         setQuery('');
         setKeywords('');
         setMS('');
@@ -182,6 +190,8 @@ const SearchForm = () => {
         setAttributeNames({});
         setStartDate({ year: '', month: '', day: '' });
         setEndDate({ year: '', month: '', day: '' });
+        setStartDateText('');
+        setEndDateText('');
         setGenerateFile(true);
         setRemove(true);
         setPersonalize(null);
@@ -197,6 +207,7 @@ const SearchForm = () => {
         const dataToSave = {
             query,
             email,
+            apiKey,
             keywords,
             m_s,
             numPages,
@@ -240,6 +251,7 @@ const SearchForm = () => {
                 // 1. Popolamento Stati Base
                 setQuery(data.query || '');
                 setEmail(data.email || '');
+                setApiKey(data.apiKey || '');
                 setKeywords(data.keywords || '');
                 setMS(data.m_s || '');
                 setNumPages(data.numPages || '1');
@@ -262,23 +274,29 @@ const SearchForm = () => {
 
                 // 5. GESTIONE DATE
                 if (data.startDate) {
-                    setStartDate({
+                    const loadedStart = {
                         year: String(data.startDate.year || ''),
                         month: String(data.startDate.month || ''),
                         day: String(data.startDate.day || '')
-                    });
+                    };
+                    setStartDate(loadedStart);
+                    setStartDateText(formatDateParts(loadedStart));
                 } else {
                     setStartDate({ year: '', month: '', day: '' });
+                    setStartDateText('');
                 }
 
                 if (data.endDate) {
-                    setEndDate({
+                    const loadedEnd = {
                         year: String(data.endDate.year || ''),
                         month: String(data.endDate.month || ''),
                         day: String(data.endDate.day || '')
-                    });
+                    };
+                    setEndDate(loadedEnd);
+                    setEndDateText(formatDateParts(loadedEnd));
                 } else {
                     setEndDate({ year: '', month: '', day: '' });
+                    setEndDateText('');
                 }
 
                 setFocusedField(null);
@@ -322,25 +340,30 @@ const SearchForm = () => {
 
         let term = query;
         
-        // 1. Filtro base
         term += ' AND "gse"[Filter]';
 
-        // 2. Organismo
         if (organism) {
-            term += ` AND "${organism}"[Organism]`;
+            // Il campo accetta piu' organismi separati da virgola (vedi placeholder).
+            // Vanno emessi come tag distinti in OR: un unico tag con la stringa
+            // intera ("homo sapiens, mice"[Organism]) non e' un organismo valido
+            // per GEO e la query non restituisce nulla.
+            const organisms = organism.split(',').map(o => o.trim()).filter(Boolean);
+            if (organisms.length === 1) {
+                term += ` AND "${organisms[0]}"[Organism]`;
+            } else if (organisms.length > 1) {
+                term += ` AND (${organisms.map(o => `"${o}"[Organism]`).join(' OR ')})`;
+            }
         }
 
-        // 3. Study Types (LOGICA OR)
         const selectedStudyTypes = Object.keys(studyTypes).filter(type => studyTypes[type]);
         if (selectedStudyTypes.length > 0) {
             const studyTypeQuery = selectedStudyTypes.map(type => `"${type}"[Filter]`).join(' OR ');
             term += ` AND (${studyTypeQuery})`;
         }
 
-        // 4. Attribute Names (LOGICA OR)
         const selectedAttributes = Object.keys(attributeNames).filter(attr => attributeNames[attr]);
         if (selectedAttributes.length > 0) {
-            const attrQuery = selectedAttributes.map(attr => `"attribute name ${attr}"[Filter]`).join(' OR ');
+            const attrQuery = selectedAttributes.map(attr => `"${attr}"[Attribute Name]`).join(' OR ');
             term += ` AND (${attrQuery})`;
         }
 
@@ -427,6 +450,16 @@ const SearchForm = () => {
         "genotype/variation", "species", "individual", "other"
     ];
 
+
+    // Accetta spazio, "/", "-" e "." come separatori: con il solo split(' ')
+    // scrivere 2026/01/01 faceva finire l'intera stringa dentro year.
+    const parseDateParts = (value) => {
+        const [year = '', month = '', day = ''] = value.replace(/^[\s/\-.]+/, '').split(/[\s/\-.]+/);
+        return { year, month, day };
+    };
+
+    const formatDateParts = ({ year, month, day }) =>
+        [year, month, day].filter(part => part !== undefined && part !== null && part !== '').join(' ');
 
     const isValidDate = (year, month, day) => {
         const y = parseInt(year);
@@ -650,6 +683,7 @@ const SearchForm = () => {
         const requestData = {
             query: fullQuery, // Inviamo la stringa completa
             email,
+            api_key: apiKey, // facoltativa: alza il limite NCBI da 3 a 10 richieste/s
             num_pages: numPages,
             keywords: cleanedKeywords,
             m_s: cleanedMeshTerms,
@@ -988,6 +1022,62 @@ const SearchForm = () => {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px 10px 10px 40px',
+                                            border: '1px solid #ddd',
+                                            borderRadius: '4px',
+                                            backgroundColor: isDarkMode ? '#333333' : '#ffffff',
+                                            color: isDarkMode ? '#ffffff' : '#000000',
+                                        }}
+                                    />
+                                </div>
+                            </FocusWrapper>
+
+                            {/* --- NCBI API KEY (facoltativa) --- */}
+                            <FocusWrapper
+                                fieldId="apiKey"
+                                isFocused={focusedField === 'apiKey'}
+                                onFocus={() => setFocusedField('apiKey')}
+                                onClose={closeFocus}
+                                isDarkMode={isDarkMode}
+                                description={<>
+                                    Optional. Without a key NCBI allows 3 requests per second; with one it
+                                    allows 10, so searches over many pages finish faster. Create a free key
+                                    from{' '}
+                                    <a
+                                        href="https://account.ncbi.nlm.nih.gov/settings/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{
+                                            color: isDarkMode ? '#1e90ff' : '#0066cc',
+                                            fontWeight: 'bold',
+                                            textDecoration: 'none'
+                                        }}
+                                        onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                        onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                    >your NCBI account settings</a>, under &quot;API Key Management&quot;.
+                                    The key is used only to talk to NCBI and is never sent anywhere else.
+                                </>}
+                            >
+                                <div style={{ position: 'relative', marginBottom: '5px' }}>
+                                    <FaKey
+                                        style={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            left: '10px',
+                                            transform: 'translateY(-50%)',
+                                            color: isDarkMode ? '#ffffff' : '#000080',
+                                            pointerEvents: 'none',
+                                            zIndex: 1
+                                        }}
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="NCBI API key (optional)"
+                                        value={apiKey}
+                                        onChange={(e) => setApiKey(e.target.value.trim())}
                                         style={{
                                             width: '100%',
                                             padding: '10px 10px 10px 40px',
@@ -1573,6 +1663,30 @@ const SearchForm = () => {
                                     </button>
                                 </div>
 
+                                {/* Nota esplicativa: chiarisce la provenienza dei filtri e perché
+                                    conviene usarli da qui invece di scrivere la sintassi a mano. */}
+                                <div style={{
+                                    border: `1px solid ${isDarkMode ? '#2c5282' : '#bee3f8'}`,
+                                    backgroundColor: isDarkMode ? '#1a2a3a' : '#ebf8ff',
+                                    borderRadius: '6px',
+                                    padding: '12px',
+                                    marginBottom: '15px',
+                                    fontSize: '12px',
+                                    lineHeight: '1.6',
+                                    color: isDarkMode ? '#cbd5e0' : '#2d3748'
+                                }}>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '6px', color: isDarkMode ? '#63b3ed' : '#2b6cb0' }}>
+                                        These are GEO's own filters
+                                    </div>
+                                    The options below are the native filters that NCBI GEO DataSets offers for
+                                    your query. FGTD reports them exactly as GEO provides them &mdash; it does not
+                                    rename, reinterpret or add filtering criteria of its own.
+                                    <div style={{ marginTop: '8px' }}>
+                                        Set them here instead of typing filter syntax into the search box: FGTD
+                                        builds the advanced query for you, so there is no GEO syntax to get wrong.
+                                    </div>
+                                </div>
+
                                 <p style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '12px', marginBottom: '15px', color: isDarkMode ? '#aaa' : '#666' }}>
                                     (Checking the query is required to enable these filters in the research.)
                                 </p>
@@ -1706,9 +1820,10 @@ const SearchForm = () => {
                                             <input
                                                 type="text"
                                                 placeholder="YYYY MM DD"
+                                                value={startDateText}
                                                 onChange={(e) => {
-                                                    const [y, m, d] = e.target.value.split(' ');
-                                                    setStartDate({ year: y, month: m, day: d });
+                                                    setStartDateText(e.target.value);
+                                                    setStartDate(parseDateParts(e.target.value));
                                                 }}
                                                 style={{ fontSize: '18px', width: '100%', padding: '5px', borderRadius: '4px', border: '1px solid #ccc',backgroundColor: isDarkMode ? '#555' : '#fff',color: isDarkMode ? '#fff' : '#000',border: '1px solid',borderColor: isDarkMode ? '#888' : '#ccc',borderRadius: '4px', }}
                                             />
@@ -1718,9 +1833,10 @@ const SearchForm = () => {
                                             <input
                                                 type="text"
                                                 placeholder="YYYY MM DD"
+                                                value={endDateText}
                                                 onChange={(e) => {
-                                                    const [y, m, d] = e.target.value.split(' ');
-                                                    setEndDate({ year: y, month: m, day: d });
+                                                    setEndDateText(e.target.value);
+                                                    setEndDate(parseDateParts(e.target.value));
                                                 }}
                                                 style={{ fontSize: '18px', width: '100%', padding: '5px', borderRadius: '4px', border: '1px solid #ccc',backgroundColor: isDarkMode ? '#555' : '#fff',color: isDarkMode ? '#fff' : '#000',border: '1px solid',borderColor: isDarkMode ? '#888' : '#ccc',borderRadius: '4px', }}
                                             />
