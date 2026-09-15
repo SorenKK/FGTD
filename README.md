@@ -58,6 +58,7 @@ Once the application is launched, you will be presented with the following **sea
 At the top of the form, you are asked to enter an **email address**.  
 This is required solely to access the **PubMed API**, as it is mandated by NCBI.  
 No personal data is stored or collected — user privacy is fully respected.
+Below the mail space, you can also provide your NCBI API key (optional) for faster data retrieval.
 ### New: Focus Mode
 When interacting with the Search Form, FGTD v1.0 automatically engages **Focus Mode**. This highlights the active input field and dims the surrounding background, providing a distraction-free environment to minimize errors during query setup.
 ## Query section
